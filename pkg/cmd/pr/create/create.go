@@ -48,8 +48,9 @@ type CreateOptions struct {
 	Finder           shared.PRFinder
 	TitledEditSurvey func(string, string) (string, string, error)
 
-	TitleProvided bool
-	BodyProvided  bool
+	TitleProvided    bool
+	BodyProvided     bool
+	AssigneeProvided bool
 
 	RootDirOverride string
 	RepoOverride    string
@@ -282,6 +283,7 @@ func NewCmdCreate(f *cmdutil.Factory, telemetry ghtelemetry.InvocationRecorder, 
 			opts.Finder = shared.NewFinder(f)
 
 			opts.TitleProvided = cmd.Flags().Changed("title")
+			opts.AssigneeProvided = cmd.Flags().Changed("assignee")
 			opts.RepoOverride, _ = cmd.Flags().GetString("repo")
 			// Workaround: Due to the way this command is implemented, we need to manually check GH_REPO.
 			// Commands should use the standard BaseRepoOverride functionality to handle this behavior instead.
@@ -743,8 +745,20 @@ func NewIssueState(ctx CreateContext, opts CreateOptions, apiActorsSupported boo
 		milestoneTitles = []string{opts.Milestone}
 	}
 
+	assignees := opts.Assignees
+	// An explicitly empty --assignee disables the configured default.
+	if !opts.AssigneeProvided && len(assignees) == 0 {
+		cfg, err := opts.Config()
+		if err != nil {
+			return nil, err
+		}
+		if assignee := cfg.PRCreateAssignee(ctx.PRRefs.BaseRepo().RepoHost()).Value; assignee != "" {
+			assignees = []string{assignee}
+		}
+	}
+
 	assigneeReplacer := shared.NewSpecialAssigneeReplacer(ctx.Client, ctx.PRRefs.BaseRepo().RepoHost(), apiActorsSupported, !opts.WebMode)
-	assignees, err := assigneeReplacer.ReplaceSlice(opts.Assignees)
+	assignees, err := assigneeReplacer.ReplaceSlice(assignees)
 	if err != nil {
 		return nil, err
 	}
