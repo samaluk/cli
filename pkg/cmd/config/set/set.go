@@ -37,6 +37,9 @@ func NewCmdConfigSet(f *cmdutil.Factory, runF func(*SetOptions) error) *cobra.Co
 			$ gh config set git_protocol ssh --host github.com
 			$ gh config set api_host api-gateway.example.com --host example.com
 			$ gh config set prompt disabled
+			$ gh config set pr_create_assignee '@me'
+			$ gh config set pr_create_assignee monalisa --host github.example.com
+			$ gh config set pr_create_assignee '' --host github.example.com
 		`),
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

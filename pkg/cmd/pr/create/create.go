@@ -243,6 +243,16 @@ func NewCmdCreate(f *cmdutil.Factory, telemetry ghtelemetry.InvocationRecorder, 
 			default branch will be used. Run %[1]sgit config branch.{current}.gh-merge-base {base}%[1]s to configure
 			the current branch to use the specified merge base.
 
+			Configure a persistent default assignee with %[1]sgh config set pr_create_assignee '@me'%[1]s
+			or a single login. The preference also applies to non-interactive invocations using the
+			same gh configuration. Host-specific settings set with %[1]sgh config set --host HOST%[1]s
+			override the global setting; an empty value disables the default for that host.
+			%[1]s@me%[1]s resolves to the authenticated identity for the target repository's host.
+			An explicit %[1]s--assignee%[1]s replaces the configured default. Use %[1]s--assignee=""%[1]s
+			to disable the default for one invocation. Interactive assignee selections and recovered
+			metadata can replace the initial assignment. In %[1]s--web%[1]s mode, the assignee prefills
+			the browser form.
+
 			Link an issue to the pull request by referencing the issue in the body of the pull
 			request. If the body text mentions %[1]sFixes #123%[1]s or %[1]sCloses #123%[1]s, the referenced issue
 			will automatically get closed when the pull request gets merged.
@@ -276,6 +286,13 @@ func NewCmdCreate(f *cmdutil.Factory, telemetry ghtelemetry.InvocationRecorder, 
 			$ gh pr create --template "pull_request_template.md"
 			$ gh pr create --attach './login.png#The login error state'
 			$ gh pr create --attach ./before.png --attach ./after.png
+
+			# Configure self-assignment for future pull requests
+			$ gh config set pr_create_assignee '@me'
+			$ gh pr create
+
+			# Create a pull request without the configured default assignee
+			$ gh pr create --assignee=""
 		`),
 		Args:    cmdutil.NoArgsQuoteReminder,
 		Aliases: []string{"new"},
