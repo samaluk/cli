@@ -31,6 +31,7 @@ const (
 	httpUnixSocketKey     = "http_unix_socket"
 	oauthTokenKey         = "oauth_token" // used by cli/go-gh to locate authenticated host tokens
 	pagerKey              = "pager"
+	prCreateAssigneeKey   = "pr_create_assignee"
 	promptKey             = "prompt"
 	preferEditorPromptKey = "prefer_editor_prompt"
 	spinnerKey            = "spinner"
@@ -161,6 +162,11 @@ func (c *cfg) HTTPUnixSocket(hostname string) gh.ConfigEntry {
 func (c *cfg) Pager(hostname string) gh.ConfigEntry {
 	// Intentionally panic if there is no user provided value or default value (which would be a programmer error)
 	return c.GetOrDefault(hostname, pagerKey).Unwrap()
+}
+
+// PRCreateAssignee returns the default PR assignee, optionally scoped by host.
+func (c *cfg) PRCreateAssignee(hostname string) gh.ConfigEntry {
+	return c.GetOrDefault(hostname, prCreateAssigneeKey).Unwrap()
 }
 
 func (c *cfg) Prompt(hostname string) gh.ConfigEntry {
@@ -647,6 +653,8 @@ accessible_colors: disabled
 accessible_prompter: disabled
 # Whether to use an animated spinner as a progress indicator. If disabled, a textual progress indicator is used instead. Supported values: enabled, disabled
 spinner: enabled
+# The default assignee for gh pr create: one login or @me. If blank, no default is applied.
+pr_create_assignee:
 `
 
 // ConfigScope controls whether a configuration option can be set globally, per host, or both.
@@ -794,6 +802,15 @@ var Options = []ConfigOption{
 		AllowedValues: []string{"enabled", "disabled", "log"},
 		CurrentValue: func(c gh.Config, hostname string) string {
 			return c.Telemetry().Value
+		},
+	},
+	{
+		Key:          prCreateAssigneeKey,
+		Description:  "the default assignee for gh pr create: one login or @me; blank disables the default",
+		DefaultValue: "",
+		Scope:        ConfigScopeGlobalOrHost,
+		CurrentValue: func(c gh.Config, hostname string) string {
+			return c.PRCreateAssignee(hostname).Value
 		},
 	},
 }

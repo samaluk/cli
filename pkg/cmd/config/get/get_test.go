@@ -117,6 +117,19 @@ func Test_getRun(t *testing.T) {
 			},
 			err: nonExistentKeyError{key: "non-existent"},
 		},
+		{
+			name:  "default PR assignee is unset",
+			input: &GetOptions{Key: "pr_create_assignee", Config: config.NewMockConfigFromString("")},
+		},
+		{
+			name:   "default PR assignee inherited from global",
+			input:  &GetOptions{Key: "pr_create_assignee", Hostname: "example.com", Config: config.NewMockConfigFromString("pr_create_assignee: '@me'")},
+			stdout: "@me\n",
+		},
+		{
+			name:  "default PR assignee disabled for host",
+			input: &GetOptions{Key: "pr_create_assignee", Hostname: "example.com", Config: config.NewMockConfigFromString("pr_create_assignee: '@me'\nhosts:\n  example.com:\n    pr_create_assignee: ''")},
+		},
 	}
 
 	for _, tt := range tests {

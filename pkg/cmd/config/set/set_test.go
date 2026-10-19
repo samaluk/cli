@@ -165,6 +165,20 @@ func Test_setRun(t *testing.T) {
 			stderr:        "! warning: 'unknownKey' is not a known configuration key\n",
 		},
 		{
+			name:          "set default PR assignee globally",
+			input:         &SetOptions{Config: config.NewMockConfig(), Key: "pr_create_assignee", Value: "@me"},
+			expectedValue: "@me",
+		},
+		{
+			name:          "set default PR assignee for host",
+			input:         &SetOptions{Config: config.NewMockConfig(), Hostname: "example.com", Key: "pr_create_assignee", Value: "monalisa"},
+			expectedValue: "monalisa",
+		},
+		{
+			name:  "disable default PR assignee for host",
+			input: &SetOptions{Config: config.NewMockConfigFromString("pr_create_assignee: '@me'"), Hostname: "example.com", Key: "pr_create_assignee", Value: ""},
+		},
+		{
 			name: "set invalid value",
 			input: &SetOptions{
 				Config: config.NewMockConfig(),
