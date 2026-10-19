@@ -3131,6 +3131,7 @@ func TestProjectsV1Deprecation(t *testing.T) {
 			// fully stubbing a GQL error structure in the request body.
 			_ = createRun(&CreateOptions{
 				Detector: &fd.EnabledDetectorMock{},
+				Config:   func() (gh.Config, error) { return config.NewMockConfig(), nil },
 				IO:       ios,
 				HttpClient: func() (*http.Client, error) {
 					return &http.Client{Transport: reg}, nil
@@ -3183,6 +3184,7 @@ func TestProjectsV1Deprecation(t *testing.T) {
 			// Ignore the error because we're not really interested in it.
 			_ = createRun(&CreateOptions{
 				Detector: &fd.DisabledDetectorMock{},
+				Config:   func() (gh.Config, error) { return config.NewMockConfig(), nil },
 				IO:       ios,
 				HttpClient: func() (*http.Client, error) {
 					return &http.Client{Transport: reg}, nil
@@ -3448,6 +3450,7 @@ func TestProjectsV1Deprecation(t *testing.T) {
 			_ = createRun(&CreateOptions{
 				Detector: &fd.EnabledDetectorMock{},
 				IO:       ios,
+				Config:   func() (gh.Config, error) { return config.NewMockConfig(), nil },
 				HttpClient: func() (*http.Client, error) {
 					return &http.Client{Transport: reg}, nil
 				},
@@ -3502,6 +3505,7 @@ func TestProjectsV1Deprecation(t *testing.T) {
 			_ = createRun(&CreateOptions{
 				Detector: &fd.DisabledDetectorMock{},
 				IO:       ios,
+				Config:   func() (gh.Config, error) { return config.NewMockConfig(), nil },
 				HttpClient: func() (*http.Client, error) {
 					return &http.Client{Transport: reg}, nil
 				},

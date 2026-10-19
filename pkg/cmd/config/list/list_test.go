@@ -91,6 +91,7 @@ func Test_listRun(t *testing.T) {
 				cfg.Set("HOST", "http_unix_socket", "")
 				cfg.Set("HOST", "browser", "brave")
 				cfg.Set("", "clipboard", "enabled")
+				cfg.Set("HOST", "pr_create_assignee", "@me")
 				return cfg
 			}(),
 			input: &ListOptions{Hostname: "HOST"},
@@ -109,6 +110,7 @@ func Test_listRun(t *testing.T) {
 				accessible_prompter=disabled
 				spinner=enabled
 				telemetry=enabled
+				pr_create_assignee=@me
 			`),
 		},
 	}

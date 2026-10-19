@@ -53,6 +53,8 @@ type Config interface {
 	HTTPUnixSocket(hostname string) ConfigEntry
 	// Pager returns the configured Pager, optionally scoped by host.
 	Pager(hostname string) ConfigEntry
+	// PRCreateAssignee returns the default PR assignee, optionally scoped by host.
+	PRCreateAssignee(hostname string) ConfigEntry
 	// Prompt returns the configured prompt, optionally scoped by host.
 	Prompt(hostname string) ConfigEntry
 	// PreferEditorPrompt returns the configured editor-based prompt, optionally scoped by host.

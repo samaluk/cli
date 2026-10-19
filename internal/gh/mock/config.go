@@ -58,6 +58,9 @@ var _ gh.Config = &ConfigMock{}
 //			MigrateFunc: func(migration gh.Migration) error {
 //				panic("mock out the Migrate method")
 //			},
+//			PRCreateAssigneeFunc: func(hostname string) gh.ConfigEntry {
+//				panic("mock out the PRCreateAssignee method")
+//			},
 //			PagerFunc: func(hostname string) gh.ConfigEntry {
 //				panic("mock out the Pager method")
 //			},
@@ -127,6 +130,9 @@ type ConfigMock struct {
 
 	// MigrateFunc mocks the Migrate method.
 	MigrateFunc func(migration gh.Migration) error
+
+	// PRCreateAssigneeFunc mocks the PRCreateAssignee method.
+	PRCreateAssigneeFunc func(hostname string) gh.ConfigEntry
 
 	// PagerFunc mocks the Pager method.
 	PagerFunc func(hostname string) gh.ConfigEntry
@@ -213,6 +219,11 @@ type ConfigMock struct {
 			// Migration is the migration argument value.
 			Migration gh.Migration
 		}
+		// PRCreateAssignee holds details about calls to the PRCreateAssignee method.
+		PRCreateAssignee []struct {
+			// Hostname is the hostname argument value.
+			Hostname string
+		}
 		// Pager holds details about calls to the Pager method.
 		Pager []struct {
 			// Hostname is the hostname argument value.
@@ -265,6 +276,7 @@ type ConfigMock struct {
 	lockGitProtocol        sync.RWMutex
 	lockHTTPUnixSocket     sync.RWMutex
 	lockMigrate            sync.RWMutex
+	lockPRCreateAssignee   sync.RWMutex
 	lockPager              sync.RWMutex
 	lockPreferEditorPrompt sync.RWMutex
 	lockPrompt             sync.RWMutex
@@ -672,6 +684,38 @@ func (mock *ConfigMock) MigrateCalls() []struct {
 	mock.lockMigrate.RLock()
 	calls = mock.calls.Migrate
 	mock.lockMigrate.RUnlock()
+	return calls
+}
+
+// PRCreateAssignee calls PRCreateAssigneeFunc.
+func (mock *ConfigMock) PRCreateAssignee(hostname string) gh.ConfigEntry {
+	if mock.PRCreateAssigneeFunc == nil {
+		panic("ConfigMock.PRCreateAssigneeFunc: method is nil but Config.PRCreateAssignee was just called")
+	}
+	callInfo := struct {
+		Hostname string
+	}{
+		Hostname: hostname,
+	}
+	mock.lockPRCreateAssignee.Lock()
+	mock.calls.PRCreateAssignee = append(mock.calls.PRCreateAssignee, callInfo)
+	mock.lockPRCreateAssignee.Unlock()
+	return mock.PRCreateAssigneeFunc(hostname)
+}
+
+// PRCreateAssigneeCalls gets all the calls that were made to PRCreateAssignee.
+// Check the length with:
+//
+//	len(mockedConfig.PRCreateAssigneeCalls())
+func (mock *ConfigMock) PRCreateAssigneeCalls() []struct {
+	Hostname string
+} {
+	var calls []struct {
+		Hostname string
+	}
+	mock.lockPRCreateAssignee.RLock()
+	calls = mock.calls.PRCreateAssignee
+	mock.lockPRCreateAssignee.RUnlock()
 	return calls
 }
 

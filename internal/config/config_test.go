@@ -48,6 +48,7 @@ func TestGetOrDefaultApplicationDefaults(t *testing.T) {
 		{httpUnixSocketKey, ""},
 		{browserKey, ""},
 		{clipboardKey, "enabled"},
+		{prCreateAssigneeKey, ""},
 	}
 
 	for _, tt := range tests {
@@ -215,6 +216,30 @@ func TestTelemetry(t *testing.T) {
 		require.Equal(t, "log", entry.Value)
 		require.Equal(t, gh.ConfigUserProvided, entry.Source)
 	})
+}
+
+func TestPRCreateAssignee(t *testing.T) {
+	tests := []struct {
+		name   string
+		config string
+		host   string
+		value  string
+		source gh.ConfigSource
+	}{
+		{name: "unset", host: "github.com", source: gh.ConfigDefaultProvided},
+		{name: "global", config: "pr_create_assignee: '@me'", value: "@me", source: gh.ConfigUserProvided},
+		{name: "host falls back to global", config: "pr_create_assignee: '@me'", host: "example.com", value: "@me", source: gh.ConfigUserProvided},
+		{name: "host override", config: "pr_create_assignee: '@me'\nhosts:\n  example.com:\n    pr_create_assignee: monalisa", host: "example.com", value: "monalisa", source: gh.ConfigUserProvided},
+		{name: "empty host masks global", config: "pr_create_assignee: '@me'\nhosts:\n  example.com:\n    pr_create_assignee: ''", host: "example.com", source: gh.ConfigUserProvided},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &cfg{ghConfig.ReadFromString(tt.config)}
+			entry := c.PRCreateAssignee(tt.host)
+			require.Equal(t, tt.value, entry.Value)
+			require.Equal(t, tt.source, entry.Source)
+		})
+	}
 }
 
 func TestClipboard(t *testing.T) {

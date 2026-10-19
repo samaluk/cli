@@ -93,6 +93,9 @@ func NewMockConfigFromString(cfgString string) *ghmock.ConfigMock {
 	mock.PagerFunc = func(hostname string) gh.ConfigEntry {
 		return cfg.Pager(hostname)
 	}
+	mock.PRCreateAssigneeFunc = func(hostname string) gh.ConfigEntry {
+		return cfg.PRCreateAssignee(hostname)
+	}
 	mock.PromptFunc = func(hostname string) gh.ConfigEntry {
 		return cfg.Prompt(hostname)
 	}

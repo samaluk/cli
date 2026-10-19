@@ -48,8 +48,9 @@ type CreateOptions struct {
 	Finder           shared.PRFinder
 	TitledEditSurvey func(string, string) (string, string, error)
 
-	TitleProvided bool
-	BodyProvided  bool
+	TitleProvided    bool
+	BodyProvided     bool
+	AssigneeProvided bool
 
 	RootDirOverride string
 	RepoOverride    string
@@ -242,6 +243,16 @@ func NewCmdCreate(f *cmdutil.Factory, telemetry ghtelemetry.InvocationRecorder, 
 			default branch will be used. Run %[1]sgit config branch.{current}.gh-merge-base {base}%[1]s to configure
 			the current branch to use the specified merge base.
 
+			Configure a persistent default assignee with %[1]sgh config set pr_create_assignee '@me'%[1]s
+			or a single login. The preference also applies to non-interactive invocations using the
+			same gh configuration. Host-specific settings set with %[1]sgh config set --host HOST%[1]s
+			override the global setting; an empty value disables the default for that host.
+			%[1]s@me%[1]s resolves to the authenticated identity for the target repository's host.
+			An explicit %[1]s--assignee%[1]s replaces the configured default. Use %[1]s--assignee=""%[1]s
+			to disable the default for one invocation. Interactive assignee selections and recovered
+			metadata can replace the initial assignment. In %[1]s--web%[1]s mode, the assignee prefills
+			the browser form.
+
 			Link an issue to the pull request by referencing the issue in the body of the pull
 			request. If the body text mentions %[1]sFixes #123%[1]s or %[1]sCloses #123%[1]s, the referenced issue
 			will automatically get closed when the pull request gets merged.
@@ -275,6 +286,13 @@ func NewCmdCreate(f *cmdutil.Factory, telemetry ghtelemetry.InvocationRecorder, 
 			$ gh pr create --template "pull_request_template.md"
 			$ gh pr create --attach './login.png#The login error state'
 			$ gh pr create --attach ./before.png --attach ./after.png
+
+			# Configure self-assignment for future pull requests
+			$ gh config set pr_create_assignee '@me'
+			$ gh pr create
+
+			# Create a pull request without the configured default assignee
+			$ gh pr create --assignee=""
 		`),
 		Args:    cmdutil.NoArgsQuoteReminder,
 		Aliases: []string{"new"},
@@ -282,6 +300,7 @@ func NewCmdCreate(f *cmdutil.Factory, telemetry ghtelemetry.InvocationRecorder, 
 			opts.Finder = shared.NewFinder(f)
 
 			opts.TitleProvided = cmd.Flags().Changed("title")
+			opts.AssigneeProvided = cmd.Flags().Changed("assignee")
 			opts.RepoOverride, _ = cmd.Flags().GetString("repo")
 			// Workaround: Due to the way this command is implemented, we need to manually check GH_REPO.
 			// Commands should use the standard BaseRepoOverride functionality to handle this behavior instead.
@@ -743,8 +762,20 @@ func NewIssueState(ctx CreateContext, opts CreateOptions, apiActorsSupported boo
 		milestoneTitles = []string{opts.Milestone}
 	}
 
+	assignees := opts.Assignees
+	// An explicitly empty --assignee disables the configured default.
+	if !opts.AssigneeProvided && len(assignees) == 0 {
+		cfg, err := opts.Config()
+		if err != nil {
+			return nil, err
+		}
+		if assignee := cfg.PRCreateAssignee(ctx.PRRefs.BaseRepo().RepoHost()).Value; assignee != "" {
+			assignees = []string{assignee}
+		}
+	}
+
 	assigneeReplacer := shared.NewSpecialAssigneeReplacer(ctx.Client, ctx.PRRefs.BaseRepo().RepoHost(), apiActorsSupported, !opts.WebMode)
-	assignees, err := assigneeReplacer.ReplaceSlice(opts.Assignees)
+	assignees, err := assigneeReplacer.ReplaceSlice(assignees)
 	if err != nil {
 		return nil, err
 	}
